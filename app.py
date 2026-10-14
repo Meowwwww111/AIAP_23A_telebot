@@ -20,6 +20,9 @@ ALLOWED_TOPIC_IDS = {
     for topic_id in os.getenv("ALLOWED_TOPIC_IDS", "263").split(",")
     if topic_id.strip()
 }
+GENERAL_CHAT_URL = os.getenv(
+    "GENERAL_CHAT_URL", "https://t.me/c/4419987380/1"
+)
 TELEGRAM_API_BASE = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
 URL_RE = re.compile(r"(?:https?://|www\.)\S+|t\.me/\S+", re.IGNORECASE)
@@ -102,8 +105,27 @@ def telegram_api(method: str, payload: dict[str, Any]) -> dict[str, Any]:
     with urllib.request.urlopen(req, timeout=10) as response:
         result = json.loads(response.read().decode("utf-8"))
     if not result.get("ok"):
-        raise RuntimeError(f"Telegram {method} failed: {result}")
+        raise RuntimeError(f"Telegram {method} failed")
     return result
+
+
+def notify_user(user_id: int) -> None:
+    text = (
+        "Your message was removed because it didn't include a link or attachment. "
+        "Please post general messages in the General chat: "
+        f"{GENERAL_CHAT_URL}"
+    )
+    try:
+        telegram_api("sendMessage", {"chat_id": user_id, "text": text})
+        logger.info("Sent moderation notice to user_id=%s", user_id)
+    except (urllib.error.URLError, TimeoutError, RuntimeError, ValueError):
+        # Telegram does not let bots start private conversations. The user may
+        # need to open this bot and press Start before private notices can arrive.
+        logger.warning(
+            "Could not send private notice to user_id=%s; the user may need to "
+            "start the bot first",
+            user_id,
+        )
 
 
 def moderate_message(message: dict[str, Any]) -> None:
@@ -141,14 +163,17 @@ def moderate_message(message: dict[str, Any]) -> None:
             message_id,
         )
     except (urllib.error.URLError, TimeoutError, RuntimeError, ValueError):
-        # Acknowledge the update so a transient deletion error does not cause
-        # Telegram to deliver the same update repeatedly.
-        logger.exception(
+        logger.warning(
             "Could not delete message chat_id=%s topic_id=%s message_id=%s",
             ALLOWED_CHAT_ID,
             thread_id,
             message_id,
         )
+        return
+
+    user_id = sender.get("id")
+    if isinstance(user_id, int):
+        notify_user(user_id)
 
 
 @app.get("/healthz")
