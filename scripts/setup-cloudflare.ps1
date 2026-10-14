@@ -43,7 +43,7 @@ try {
     finally {
         $randomGenerator.Dispose()
     }
-    $webhookSecret = [Convert]::ToHexString($randomBytes).ToLowerInvariant()
+    $webhookSecret = [BitConverter]::ToString($randomBytes).Replace("-", "").ToLowerInvariant()
 
     $secretJson = @{
         TELEGRAM_BOT_TOKEN = $botToken
