@@ -17,7 +17,13 @@ Cloudflare Workers Free currently includes 100,000 requests per day. Cloudflare 
 
 ## Deploy
 
-Run these commands from this repository. Wrangler will open a browser so you can sign in to your own Cloudflare account.
+The Worker is already deployed. To connect your Telegram bot, run the Windows setup script from this repository. It prompts for the BotFather token with hidden input, saves the token and a generated webhook secret as Cloudflare secrets, then registers the webhook with Telegram.
+
+```powershell
+./scripts/setup-cloudflare.ps1
+```
+
+For a fresh deployment, Wrangler will open a browser so you can sign in to your Cloudflare account. Then run:
 
 ```sh
 npx wrangler@latest login
@@ -36,6 +42,8 @@ openssl rand -hex 32
 Save the generated value somewhere private, enter it when Wrangler prompts for `WEBHOOK_SECRET`, and use the same value to register the Telegram webhook. The Bot API accepts a secret made of letters, numbers, `_`, and `-`.
 
 The deployment prints a `workers.dev` URL. Set that URL as Telegram's webhook, replacing the placeholders below. In Bash:
+
+On Windows, the setup script above handles this step and removes its temporary secret file when finished.
 
 ```sh
 export TELEGRAM_BOT_TOKEN="YOUR_BOT_TOKEN"
