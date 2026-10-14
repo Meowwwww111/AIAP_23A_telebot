@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "aiap-topic-moderator",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-14",
+  "workers_dev": true,
+  "vars": {
+    "ALLOWED_CHAT_ID": "-1004419987380",
+    "ALLOWED_TOPIC_IDS": "263",
+    "GENERAL_CHAT_URL": "https://t.me/c/4419987380/1"
+  },
+  "queues": {
+    "producers": [
+      {
+        "binding": "NOTICE_CLEANUP",
+        "queue": "topic-notice-cleanup"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "topic-notice-cleanup",
+        "max_batch_size": 10,
+        "max_batch_timeout": 1,
+        "max_retries": 10,
+        "retry_delay": 10
+      }
+    ]
+  }
+}
