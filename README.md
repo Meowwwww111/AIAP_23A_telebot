@@ -12,7 +12,7 @@ The bot keeps a message if it contains a URL or text link, link preview, or supp
 
 - A Telegram bot created through [@BotFather](https://t.me/BotFather).
 - The bot added to the AIAP supergroup as an administrator with **Delete messages** permission. Admin status lets it receive group messages needed for moderation.
-- A Google Cloud project with billing enabled and the Cloud Run, Cloud Build, and Secret Manager APIs enabled.
+- A Google Cloud project with billing enabled and the Cloud Run, Cloud Build, Artifact Registry, and Secret Manager APIs enabled.
 - `gcloud` CLI for deployment.
 
 ## Configure secrets
@@ -29,6 +29,20 @@ echo -n "$WEBHOOK_SECRET" | gcloud secrets versions add telegram-webhook-secret 
 
 `WEBHOOK_SECRET` should be a random string using only letters, digits, `_`, and `-` (for example, generate one with `openssl rand -hex 32`).
 
+Grant the Cloud Run runtime service account access to both secrets. In Bash:
+
+```sh
+PROJECT_ID="YOUR_PROJECT_ID"
+PROJECT_NUMBER="$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')"
+RUNTIME_SERVICE_ACCOUNT="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+
+for SECRET in telegram-bot-token telegram-webhook-secret; do
+  gcloud secrets add-iam-policy-binding "$SECRET" \
+    --member="serviceAccount:${RUNTIME_SERVICE_ACCOUNT}" \
+    --role="roles/secretmanager.secretAccessor"
+done
+```
+
 ## Deploy to Cloud Run
 
 From this repository, choose a project and region, then deploy the Dockerfile-backed service:
@@ -40,6 +54,7 @@ gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregi
 gcloud run deploy aiap-topic-moderator \
   --source . \
   --region asia-southeast1 \
+  --service-account="$RUNTIME_SERVICE_ACCOUNT" \
   --allow-unauthenticated \
   --min 0 \
   --max 2 \
