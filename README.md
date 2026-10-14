@@ -8,6 +8,8 @@ The supplied topic link is `https://t.me/c/4419987380/263`. Its forum topic ID i
 
 The bot keeps a message if it contains a URL or text link, link preview, or supported content such as a photo, document, video, audio, voice message, sticker, poll, location, contact, or game. Other regular messages in the configured topic are deleted. Messages in other groups or topics are ignored. Service messages and messages from bots are ignored.
 
+After a successful deletion, the bot sends the sender a private notice with the General chat link. Telegram only allows a bot to initiate a private conversation after the user has opened the bot and pressed **Start** (or otherwise contacted it). If the user has not done that, the deletion still succeeds and the failed private notice is logged. The link defaults to `https://t.me/c/4419987380/1` and can be changed with `GENERAL_CHAT_URL`.
+
 ## Requirements
 
 - A Telegram bot created through [@BotFather](https://t.me/BotFather).
@@ -58,7 +60,7 @@ gcloud run deploy aiap-topic-moderator \
   --allow-unauthenticated \
   --min 0 \
   --max 2 \
-  --set-env-vars ALLOWED_CHAT_ID=-1004419987380,ALLOWED_TOPIC_IDS=263 \
+  --set-env-vars ALLOWED_CHAT_ID=-1004419987380,ALLOWED_TOPIC_IDS=263,GENERAL_CHAT_URL=https://t.me/c/4419987380/1 \
   --set-secrets TELEGRAM_BOT_TOKEN=telegram-bot-token:latest,WEBHOOK_SECRET=telegram-webhook-secret:latest
 ```
 
@@ -90,6 +92,7 @@ docker run --rm -p 8080:8080 \
   -e WEBHOOK_SECRET="$WEBHOOK_SECRET" \
   -e ALLOWED_CHAT_ID=-1004419987380 \
   -e ALLOWED_TOPIC_IDS=263 \
+  -e GENERAL_CHAT_URL=https://t.me/c/4419987380/1 \
   aiap-topic-moderator
 ```
 
